@@ -7,9 +7,9 @@ export default function AppHeader() {
       <div className="brand-container">
         <div className="brand-logo">
           <DocumentIcon className="logo-icon" />
-          <h1>Scriptly</h1>
+          <h1>VideoScript</h1>
         </div>
-        <p>Professional transcript analysis and editing</p>
+        <p>Professional video transcription and analysis</p>
         <div className="brand-attribution">
           <span>Built by</span>
           <strong>CarrollMedia</strong>

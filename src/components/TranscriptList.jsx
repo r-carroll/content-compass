@@ -20,8 +20,8 @@ export default function TranscriptList({ transcripts, onSelect, selectedId, onDe
       <div className="transcript-list empty">
         <div className="empty-state">
           <DocumentIcon className="empty-icon" />
-          <h4>No transcripts yet</h4>
-          <p>Upload your first transcript to get started</p>
+          <h4>No videos processed yet</h4>
+          <p>Upload your first video to get started</p>
         </div>
       </div>
     );

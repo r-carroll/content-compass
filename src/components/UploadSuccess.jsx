@@ -8,8 +8,8 @@ export default function UploadSuccess({ transcript, onViewSnippets, onUploadAnot
       <div className="success-icon">
         <CheckCircleIcon />
       </div>
-      <h2>Transcript Uploaded Successfully!</h2>
-      <p className="success-subtitle">Your transcript has been processed and is ready for analysis</p>
+      <h2>Video Processed Successfully!</h2>
+      <p className="success-subtitle">Your video has been transcribed and is ready for analysis</p>
       
       <div className="transcript-summary">
         <h3>{transcript.title}</h3>
