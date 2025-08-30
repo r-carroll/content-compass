@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import { useSnippets } from '../hooks/useSnippets';
 
-const SnippetContext = createContext();
+const SnippetContext = createContext(null);
 
 export function SnippetProvider({ transcriptId, children, onTranscriptUpdated }) {
   const snippetHook = useSnippets(transcriptId);

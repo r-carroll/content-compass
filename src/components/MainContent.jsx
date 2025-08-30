@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import FileUpload from './FileUpload';
+import VideoUpload from './VideoUpload';
+import VideoProcessing from './VideoProcessing';
 import UploadSuccess from './UploadSuccess';
 import TranscriptList from './TranscriptList';
 import SnippetView from './SnippetView';
-import { useUpload } from '../hooks/useUpload';
+import { useVideoUpload } from '../hooks/useVideoUpload';
 
 export default function MainContent({ 
   transcripts, 
@@ -14,19 +15,43 @@ export default function MainContent({
   onRefreshTranscripts
 }) {
   const [currentView, setCurrentView] = useState('upload');
-  const [uploadedTranscript, setUploadedTranscript] = useState(null);
+  const [processedTranscript, setProcessedTranscript] = useState(null);
   const [viewingSnippets, setViewingSnippets] = useState(null);
-  const { loading, error, uploadTranscript, clearError } = useUpload();
+  const [processingProgress, setProcessingProgress] = useState(0);
+  const [processingFileName, setProcessingFileName] = useState('');
+  const { loading, error, uploadVideo, clearError } = useVideoUpload();
 
-  const handleUpload = async (fileOrData) => {
+  const handleVideoUpload = async (videoFile) => {
     try {
-      const result = await uploadTranscript(fileOrData);
-      setUploadedTranscript(result);
-      setCurrentView('success');
+      setProcessingFileName(videoFile.name);
+      setCurrentView('processing');
+      
+      // Simulate processing progress
+      const progressInterval = setInterval(() => {
+        setProcessingProgress(prev => {
+          if (prev >= 95) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + Math.random() * 10;
+        });
+      }, 500);
+      
+      const result = await uploadVideo(videoFile);
+      clearInterval(progressInterval);
+      setProcessingProgress(100);
+      
+      setTimeout(() => {
+        setProcessedTranscript(result);
+        setCurrentView('success');
+      }, 1000);
+      
       onTranscriptAdded(result);
     } catch (err) {
       // Handled by hook
-      console.error('Upload failed:', err);
+      console.error('Video processing failed:', err);
+      setCurrentView('upload');
+      setProcessingProgress(0);
     }
   };
 
@@ -37,7 +62,9 @@ export default function MainContent({
 
   const handleUploadAnother = () => {
     setCurrentView('upload');
-    setUploadedTranscript(null);
+    setProcessedTranscript(null);
+    setProcessingProgress(0);
+    setProcessingFileName('');
     clearError();
   };
 
@@ -99,15 +126,22 @@ export default function MainContent({
         <div className="content-grid">
           <div className="upload-section">
             {currentView === 'upload' && (
-              <FileUpload 
-                onUpload={handleUpload} 
+              <VideoUpload 
+                onUpload={handleVideoUpload} 
                 loading={loading}
               />
             )}
             
-            {currentView === 'success' && uploadedTranscript && (
+            {currentView === 'processing' && (
+              <VideoProcessing 
+                fileName={processingFileName}
+                progress={processingProgress}
+              />
+            )}
+            
+            {currentView === 'success' && processedTranscript && (
               <UploadSuccess
-                transcript={uploadedTranscript}
+                transcript={processedTranscript}
                 onViewSnippets={handleViewSnippets}
                 onUploadAnother={handleUploadAnother}
               />

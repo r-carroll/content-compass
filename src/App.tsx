@@ -1,50 +1,48 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import React, { useState, useEffect } from 'react';
+import AppHeader from './components/AppHeader';
+import MainContent from './components/MainContent';
+import { useTranscripts } from './hooks/useTranscripts';
+import './styles/App.css';
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const { 
+    transcripts, 
+    loading, 
+    error, 
+    loadTranscripts, 
+    deleteTranscript 
+  } = useTranscripts();
+  
+  const [selectedTranscript, setSelectedTranscript] = useState(null);
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  useEffect(() => {
+    loadTranscripts();
+  }, []);
+
+  const handleTranscriptAdded = (newTranscript) => {
+    loadTranscripts(); // Refresh the list
+  };
+
+  const handleTranscriptDeleted = async (transcriptId) => {
+    await deleteTranscript(transcriptId);
+  };
+
+  const handleRefreshTranscripts = async () => {
+    await loadTranscripts();
+  };
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    <div className="app">
+      <AppHeader />
+      <MainContent
+        transcripts={transcripts}
+        onTranscriptAdded={handleTranscriptAdded}
+        onTranscriptDeleted={handleTranscriptDeleted}
+        selectedTranscript={selectedTranscript}
+        onTranscriptSelected={setSelectedTranscript}
+        onRefreshTranscripts={handleRefreshTranscripts}
+      />
+    </div>
   );
 }
 
