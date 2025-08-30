@@ -1,4 +1,5 @@
 node_modules/
+compass/
 dist/*
 .env
 .DS_Store
