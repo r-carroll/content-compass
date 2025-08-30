@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { validateVideoFile } from '../lib/validation';
 import ValidationErrorModal from './ValidationErrorModal';
-import { UploadIcon, DocumentIcon, CheckIcon } from './Icons';
+import { VideoIcon, SparkleIcon, CompassIcon } from './Icons';
 
 export default function VideoUpload({ onUpload, loading }) {
   const [dragActive, setDragActive] = useState(false);
@@ -78,19 +78,32 @@ export default function VideoUpload({ onUpload, loading }) {
           <div className="drop-zone-content">
             {loading ? (
               <div className="loading-spinner">
-                <div className="spinner"></div>
+                <div className="processing-animation">
+                  <SparkleIcon className="sparkle-icon" />
+                  <div className="spinner"></div>
+                </div>
                 <p>Processing video...</p>
               </div>
             ) : (
               <>
                 <div className="upload-icon">
-                  <DocumentIcon />
+                  <VideoIcon />
                 </div>
                 <h3>Drop your video file here</h3>
                 <p>or click to browse and select a video file</p>
                 <div className="upload-hint">
                   <span className="file-types">Supports MP4, MOV, AVI, MKV, WebM</span>
                   <span className="file-size">Max size: 500MB</span>
+                </div>
+                <div className="upload-features">
+                  <div className="feature">
+                    <SparkleIcon className="feature-icon" />
+                    <span>AI-powered transcription</span>
+                  </div>
+                  <div className="feature">
+                    <CompassIcon className="feature-icon" />
+                    <span>Smart content analysis</span>
+                  </div>
                 </div>
               </>
             )}

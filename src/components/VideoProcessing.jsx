@@ -1,5 +1,5 @@
 import React from 'react';
-import { DocumentIcon, CheckIcon } from './Icons';
+import { VideoIcon, CheckIcon, SparkleIcon } from './Icons';
 
 export default function VideoProcessing({ fileName, progress }) {
   const steps = [
@@ -12,11 +12,14 @@ export default function VideoProcessing({ fileName, progress }) {
   return (
     <div className="processing-state">
       <div className="processing-icon">
-        <DocumentIcon />
+        <div className="processing-animation">
+          <SparkleIcon className="sparkle-icon" />
+          <VideoIcon className="video-icon" />
+        </div>
       </div>
-      <h2>Processing Video</h2>
+      <h2>Analyzing Your Content</h2>
       <p className="processing-subtitle">
-        We're transcribing "{fileName}" and preparing it for analysis
+        We're extracting insights from "{fileName}" using AI-powered analysis
       </p>
       
       <div className="processing-steps">

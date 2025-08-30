@@ -175,3 +175,48 @@ export const GridIcon = ({ className, ...props }) => (
     <line x1="9" y1="15" x2="15" y2="15" />
   </svg>
 );
+
+// Compass Icon for branding
+export const CompassIcon = ({ className, ...props }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88 16.24,7.76" />
+  </svg>
+);
+
+// Video/Media Icons
+export const VideoIcon = ({ className, ...props }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <polygon points="23,7 16,12 23,17 23,7" />
+    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+  </svg>
+);
+
+export const PlayIcon = ({ className, ...props }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <polygon points="5,3 19,12 5,21 5,3" />
+  </svg>
+);
+
+// Analytics Icons
+export const TrendingUpIcon = ({ className, ...props }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <polyline points="22,7 13.5,15.5 8.5,10.5 2,17" />
+    <polyline points="16,7 22,7 22,13" />
+  </svg>
+);
+
+export const BarChartIcon = ({ className, ...props }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <line x1="12" y1="20" x2="12" y2="10" />
+    <line x1="18" y1="20" x2="18" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="16" />
+  </svg>
+);
+
+// Sparkle Icon for magic/AI processing
+export const SparkleIcon = ({ className, ...props }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0L9.937 15.5Z" />
+  </svg>
+);
