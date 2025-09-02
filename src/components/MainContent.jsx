@@ -17,12 +17,10 @@ export default function MainContent({
   const [currentView, setCurrentView] = useState('upload');
   const [processedTranscript, setProcessedTranscript] = useState(null);
   const [viewingSnippets, setViewingSnippets] = useState(null);
-  const [transcriptData, setTranscriptData] = useState(null);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [processingFileName, setProcessingFileName] = useState('');
   const { loading, error, uploadVideo, clearError } = useVideoUpload();
 
-  const handleVideoUpload = async (videoFile) => {
   const handleVideoUpload = async (videoFile, filePath = null) => {
     try {
       setProcessingFileName(videoFile.name);
@@ -45,7 +43,6 @@ export default function MainContent({
       
       setTimeout(() => {
         setProcessedTranscript(result);
-        setTranscriptData(result);
         setCurrentView('success');
       }, 1000);
       
@@ -60,14 +57,12 @@ export default function MainContent({
 
   const handleViewSnippets = (transcriptId) => {
     const transcript = transcripts.find(t => t.id === transcriptId);
-    const data = transcriptId === processedTranscript?.id ? transcriptData : null;
-    setViewingSnippets({ id: transcriptId, transcript, data });
+    setViewingSnippets({ id: transcriptId, transcript });
   };
 
   const handleUploadAnother = () => {
     setCurrentView('upload');
     setProcessedTranscript(null);
-    setTranscriptData(null);
     setProcessingProgress(0);
     setProcessingFileName('');
     clearError();
@@ -168,7 +163,6 @@ export default function MainContent({
         <SnippetView
           transcriptId={viewingSnippets.id}
           transcript={viewingSnippets.transcript}
-          transcriptData={viewingSnippets.data}
           onClose={handleCloseSnippets}
           onTranscriptUpdated={handleTranscriptUpdated}
         />
