@@ -10,6 +10,8 @@ export function useVideoUpload() {
     setLoading(true);
     setError(null);
     setProcessingStep('Preparing transcription...');
+    
+    console.log('uploadVideo called with:', { videoFile, filePath });
 
     try {
       let pathToTranscribe = filePath;
@@ -20,10 +22,13 @@ export function useVideoUpload() {
         throw new Error('File path is required for transcription. Please use the file picker instead.');
       }
       
+      console.log('Starting transcription for path:', pathToTranscribe);
       setProcessingStep('Transcribing audio...');
       
       // Call the Tauri transcribe command
+      console.log('Calling transcribeVideo...');
       const transcriptionResult = await transcribeVideo(pathToTranscribe);
+      console.log('Transcription result:', transcriptionResult);
       
       setProcessingStep('Processing transcript...');
       

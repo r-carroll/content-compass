@@ -23,6 +23,7 @@ export default function MainContent({
 
   const handleVideoUpload = async (videoFile, filePath = null) => {
     try {
+      console.log('MainContent handleVideoUpload called:', { videoFile, filePath });
       setProcessingFileName(videoFile.name);
       setCurrentView('processing');
       

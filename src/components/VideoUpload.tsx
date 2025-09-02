@@ -11,7 +11,10 @@ export default function VideoUpload({ onUpload, loading }) {
 
   const handleSelectFile = async () => {
     try {
+      console.log('Opening file picker...');
       const filePath = await selectVideoFile();
+      console.log('Selected file path:', filePath);
+      
       if (filePath) {
         // Create a mock file object for validation
         const fileName = filePath.split('/').pop() || 'selected-file';
@@ -21,10 +24,12 @@ export default function VideoUpload({ onUpload, loading }) {
           type: 'video/' + (fileName.split('.').pop() || 'mp4')
         };
         
+        console.log('Calling onUpload with:', mockFile, filePath);
         // Skip size validation for selected files since we don't have the info
         onUpload(mockFile, filePath);
       }
     } catch (error) {
+      console.error('File selection error:', error);
       setValidationError(`File selection failed: ${error.message}`);
     }
   };
