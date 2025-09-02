@@ -43,8 +43,11 @@ export default function VideoUpload({ onUpload, loading }) {
     e.stopPropagation();
     setDragActive(false);
     
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleVideoUpload(e.dataTransfer.files[0], null);
+    if (loading) return;
+    
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      handleVideoUpload(files[0], null);
     }
   };
 
@@ -62,7 +65,10 @@ export default function VideoUpload({ onUpload, loading }) {
   };
 
   const handleFileSelect = (e) => {
-    if (e.target.files && e.target.files[0]) {
+    if (loading) return;
+    
+    const files = e.target.files;
+    if (files && files[0]) {
       handleVideoUpload(e.target.files[0], null);
     }
   };
@@ -81,13 +87,25 @@ export default function VideoUpload({ onUpload, loading }) {
   return (
     <>
       <div className="upload-container">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="video/*,.mp4,.mov,.avi,.mkv,.webm"
+          onChange={handleFileSelect}
+          style={{ display: 'none' }}
+        />
         <div 
           className={`drop-zone ${dragActive ? 'drag-active' : ''} ${loading ? 'loading' : ''}`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          onClick={() => !loading && handleSelectFile()}
+          onClick={() => {
+            if (loading) return;
+            if (fileInputRef.current) {
+              fileInputRef.current.click();
+            }
+          }}
         >
           
           <div className="drop-zone-content">
