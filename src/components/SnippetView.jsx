@@ -5,14 +5,14 @@ import SnippetViewControls from './SnippetViewControls';
 import SnippetList from './SnippetList';
 import { AlertTriangleIcon, RefreshIcon } from './Icons';
 
-function SnippetViewContent({ transcript, onClose }) {
+function SnippetViewContent({ transcript, transcriptData, onClose }) {
   const snippetContext = useSnippetContext();
   
   const [filteredSnippets, setFilteredSnippets] = useState([]);
 
   useEffect(() => {
     snippetContext.loadSnippets();
-  }, []);
+  }, [transcriptData]);
 
   useEffect(() => {
     if (snippetContext.searchQuery.trim()) {
@@ -167,14 +167,16 @@ function SnippetViewContent({ transcript, onClose }) {
   );
 }
 
-export default function SnippetView({ transcriptId, transcript, onClose, onTranscriptUpdated }) {
+export default function SnippetView({ transcriptId, transcript, transcriptData, onClose, onTranscriptUpdated }) {
   return (
     <SnippetProvider 
-      transcriptId={transcriptId} 
+      transcriptId={transcriptId}
+      transcriptData={transcriptData}
       onTranscriptUpdated={onTranscriptUpdated}
     >
       <SnippetViewContent 
         transcript={transcript} 
+        transcriptData={transcriptData}
         onClose={onClose} 
       />
     </SnippetProvider>

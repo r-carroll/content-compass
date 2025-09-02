@@ -3,8 +3,8 @@ import { useSnippets } from '../hooks/useSnippets';
 
 const SnippetContext = createContext(null);
 
-export function SnippetProvider({ transcriptId, children, onTranscriptUpdated }) {
-  const snippetHook = useSnippets(transcriptId);
+export function SnippetProvider({ transcriptId, transcriptData, children, onTranscriptUpdated }) {
+  const snippetHook = useSnippets(transcriptId, transcriptData);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSnippetIndex, setSelectedSnippetIndex] = useState(0);
   

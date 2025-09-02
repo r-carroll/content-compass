@@ -1,32 +1,45 @@
 import { useState } from 'react';
 
-export function useSnippets(transcriptId) {
+export function useSnippets(transcriptId, transcriptData = null) {
   const [snippets, setSnippets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [updatingSnippets, setUpdatingSnippets] = useState(new Set());
 
   const loadSnippets = async () => {
-    if (!transcriptId) return;
+    if (!transcriptId && !transcriptData) return;
     
     setLoading(true);
     setError(null);
 
     try {
-      // Simulate API call to load snippets
-      await new Promise(resolve => setTimeout(resolve, 800));
+      let snippetData;
       
-      // Mock snippet data
-      const mockSnippets = Array.from({ length: 15 }, (_, i) => ({
-        id: `snippet-${i + 1}`,
-        text: `This is snippet ${i + 1} from the transcript. It contains some sample text that would normally come from the video transcription process.`,
-        start: i * 30,
-        end: (i + 1) * 30 - 2,
-        needs_review: Math.random() > 0.7,
-        notes: Math.random() > 0.8 ? `Note for snippet ${i + 1}` : null
-      }));
+      if (transcriptData?.transcription_data?.snippets) {
+        // Use real transcription data
+        snippetData = transcriptData.transcription_data.snippets.map((snippet, i) => ({
+          id: snippet.id || `snippet-${i + 1}`,
+          text: snippet.text || '',
+          start: snippet.start || 0,
+          end: snippet.end || 0,
+          needs_review: snippet.needs_review || false,
+          notes: snippet.notes || null
+        }));
+      } else {
+        // Fallback to mock data for existing transcripts
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        snippetData = Array.from({ length: 15 }, (_, i) => ({
+          id: `snippet-${i + 1}`,
+          text: `This is snippet ${i + 1} from the transcript. It contains some sample text that would normally come from the video transcription process.`,
+          start: i * 30,
+          end: (i + 1) * 30 - 2,
+          needs_review: Math.random() > 0.7,
+          notes: Math.random() > 0.8 ? `Note for snippet ${i + 1}` : null
+        }));
+      }
 
-      setSnippets(mockSnippets);
+      setSnippets(snippetData);
     } catch (err) {
       setError(err.message || 'Failed to load snippets');
     } finally {

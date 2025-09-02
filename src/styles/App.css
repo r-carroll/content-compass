@@ -318,6 +318,14 @@ body {
 .drop-zone p {
   color: var(--text-secondary);
   margin-bottom: var(--spacing-md);
+  font-size: 1rem;
+}
+
+.drop-zone .file-picker-note {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: var(--spacing-sm);
 }
 
 .upload-hint {
@@ -335,7 +343,9 @@ body {
 
 .upload-features {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-lg);
+  justify-content: center;
   margin-top: var(--spacing-md);
 }
 
@@ -349,6 +359,7 @@ body {
   background: rgba(99, 102, 241, 0.1);
   border-radius: var(--radius);
   transition: var(--transition);
+  white-space: nowrap;
 }
 
 .feature:hover {
@@ -987,5 +998,18 @@ body {
   
   .success-actions {
     flex-direction: column;
+  }
+  
+  .upload-features {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .drop-zone h3 {
+    font-size: 1.125rem;
+  }
+  
+  .drop-zone p {
+    font-size: 0.9rem;
   }
 }

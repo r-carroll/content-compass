@@ -1,43 +1,54 @@
 import { useState } from 'react';
+import { transcribeVideo } from '../lib/tauri';
 
 export function useVideoUpload() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [processingStep, setProcessingStep] = useState('');
 
-  const uploadVideo = async (videoFile) => {
+  const uploadVideo = async (videoFile, filePath = null) => {
     setLoading(true);
     setError(null);
+    setProcessingStep('Preparing transcription...');
 
     try {
-      // Simulate video processing API call
-      // In a real implementation, this would:
-      // 1. Upload the video file to a processing service
-      // 2. Extract audio from the video
-      // 3. Send audio to transcription service (like OpenAI Whisper, AssemblyAI, etc.)
-      // 4. Process the transcript into snippets
-      // 5. Store the result in the database
+      let pathToTranscribe = filePath;
       
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate processing time
+      // If no file path provided (web upload), we need to handle file differently
+      if (!pathToTranscribe && videoFile) {
+        // For now, show error since we need file path for Tauri command
+        throw new Error('File path is required for transcription. Please use the file picker instead.');
+      }
       
-      // Mock processed transcript result
-      const mockTranscript = {
+      setProcessingStep('Transcribing audio...');
+      
+      // Call the Tauri transcribe command
+      const transcriptionResult = await transcribeVideo(pathToTranscribe);
+      
+      setProcessingStep('Processing transcript...');
+      
+      // Process the transcription result into our expected format
+      const fileName = videoFile?.name || pathToTranscribe.split('/').pop() || 'Unknown';
+      const processedTranscript = {
         id: Date.now().toString(),
-        title: videoFile.name.replace(/\.[^/.]+$/, ''), // Remove file extension
-        snippet_count: Math.floor(Math.random() * 20) + 10,
-        total_duration: Math.floor(Math.random() * 3600) + 300, // 5-65 minutes
-        needs_review_count: Math.floor(Math.random() * 5),
+        title: fileName.replace(/\.[^/.]+$/, ''), // Remove file extension
+        snippet_count: transcriptionResult.snippets?.length || 0,
+        total_duration: transcriptionResult.duration || 0,
+        needs_review_count: transcriptionResult.snippets?.filter(s => s.needs_review).length || 0,
         created_at: new Date().toISOString(),
-        video_file_name: videoFile.name,
-        video_file_size: videoFile.size
+        video_file_name: fileName,
+        video_file_size: videoFile?.size || 0,
+        transcription_data: transcriptionResult
       };
 
-      return mockTranscript;
+      return processedTranscript;
     } catch (err) {
       const errorMessage = err.message || 'Failed to process video';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
+      setProcessingStep('');
     }
   };
 
@@ -48,6 +59,7 @@ export function useVideoUpload() {
   return {
     loading,
     error,
+    processingStep,
     uploadVideo,
     clearError
   };

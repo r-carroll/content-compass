@@ -10,10 +10,12 @@ export function validateVideoFile(file) {
     throw new ValidationError('No file provided');
   }
 
-  // Check file size (500MB limit)
-  const maxSize = 500 * 1024 * 1024; // 500MB in bytes
-  if (file.size > maxSize) {
-    throw new ValidationError(`File size (${(file.size / 1024 / 1024).toFixed(1)}MB) exceeds the 500MB limit`);
+  // Check file size (500MB limit) - only if size is available
+  if (file.size && file.size > 0) {
+    const maxSize = 500 * 1024 * 1024; // 500MB in bytes
+    if (file.size > maxSize) {
+      throw new ValidationError(`File size (${(file.size / 1024 / 1024).toFixed(1)}MB) exceeds the 500MB limit`);
+    }
   }
 
   // Check file type

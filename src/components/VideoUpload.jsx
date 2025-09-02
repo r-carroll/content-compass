@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { validateVideoFile } from '../lib/validation';
+import { selectVideoFile } from '../lib/tauri';
 import ValidationErrorModal from './ValidationErrorModal';
 import { VideoIcon, SparkleIcon, CompassIcon } from './Icons';
 
@@ -8,6 +9,25 @@ export default function VideoUpload({ onUpload, loading }) {
   const [validationError, setValidationError] = useState(null);
   const fileInputRef = useRef(null);
 
+  const handleSelectFile = async () => {
+    try {
+      const filePath = await selectVideoFile();
+      if (filePath) {
+        // Create a mock file object for validation
+        const fileName = filePath.split('/').pop() || 'selected-file';
+        const mockFile = {
+          name: fileName,
+          size: 0, // We don't have size info from file path
+          type: 'video/' + (fileName.split('.').pop() || 'mp4')
+        };
+        
+        // Skip size validation for selected files since we don't have the info
+        onUpload(mockFile, filePath);
+      }
+    } catch (error) {
+      setValidationError(`File selection failed: ${error.message}`);
+    }
+  };
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -24,14 +44,17 @@ export default function VideoUpload({ onUpload, loading }) {
     setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleVideoUpload(e.dataTransfer.files[0]);
+      handleVideoUpload(e.dataTransfer.files[0], null);
     }
   };
 
-  const handleVideoUpload = (file) => {
+  const handleVideoUpload = (file, filePath) => {
     try {
-      validateVideoFile(file);
-      onUpload(file);
+      // Only validate file size for actual file objects (not file paths)
+      if (!filePath) {
+        validateVideoFile(file);
+      }
+      onUpload(file, filePath);
     } catch (error) {
       setValidationError(`Invalid file: ${error.message}`);
       return;
@@ -40,7 +63,7 @@ export default function VideoUpload({ onUpload, loading }) {
 
   const handleFileSelect = (e) => {
     if (e.target.files && e.target.files[0]) {
-      handleVideoUpload(e.target.files[0]);
+      handleVideoUpload(e.target.files[0], null);
     }
   };
 
@@ -64,16 +87,8 @@ export default function VideoUpload({ onUpload, loading }) {
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          onClick={() => !loading && fileInputRef.current?.click()}
+          onClick={() => !loading && handleSelectFile()}
         >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="video/*,.mp4,.mov,.avi,.mkv,.webm"
-            onChange={handleFileSelect}
-            style={{ display: 'none' }}
-            disabled={loading}
-          />
           
           <div className="drop-zone-content">
             {loading ? (
@@ -90,7 +105,7 @@ export default function VideoUpload({ onUpload, loading }) {
                   <VideoIcon />
                 </div>
                 <h3>Drop your video file here</h3>
-                <p>or click to browse and select a video file</p>
+                <p>or click to select a video file from your computer</p>
                 <div className="upload-hint">
                   <span className="file-types">Supports MP4, MOV, AVI, MKV, WebM</span>
                   <span className="file-size">Max size: 500MB</span>
@@ -98,11 +113,11 @@ export default function VideoUpload({ onUpload, loading }) {
                 <div className="upload-features">
                   <div className="feature">
                     <SparkleIcon className="feature-icon" />
-                    <span>AI-powered transcription</span>
+                    <span>Local AI transcription</span>
                   </div>
                   <div className="feature">
                     <CompassIcon className="feature-icon" />
-                    <span>Smart content analysis</span>
+                    <span>Intelligent snippet extraction</span>
                   </div>
                 </div>
               </>
