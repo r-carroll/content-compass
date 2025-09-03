@@ -22,31 +22,32 @@ export default function MainContent({
   const { loading, error, uploadVideo, clearError } = useVideoUpload();
 
   const handleVideoUpload = async (videoFile) => {
+    console.log('handleVideoUpload called with:', videoFile);
     try {
       setProcessingFileName(videoFile.name);
       setCurrentView('processing');
       
       // Simulate processing progress
-      const progressInterval = setInterval(() => {
-        setProcessingProgress(prev => {
-          if (prev >= 95) {
-            clearInterval(progressInterval);
-            return prev;
-          }
-          return prev + Math.random() * 10;
-        });
-      }, 500);
-      
+      // const progressInterval = setInterval(() => {
+      //   setProcessingProgress(prev => {
+      //     if (prev >= 95) {
+      //       clearInterval(progressInterval);
+      //       return prev;
+      //     }
+      //     return prev + Math.random() * 10;
+      //   });
+      // }, 500);
+      console.log('Starting upload for:', videoFile);
       const result = await uploadVideo(videoFile);
-      clearInterval(progressInterval);
-      setProcessingProgress(100);
+      // clearInterval(progressInterval);
+      // setProcessingProgress(100);
       
-      setTimeout(() => {
-        setProcessedTranscript(result);
-        setCurrentView('success');
-      }, 1000);
+      // setTimeout(() => {
+      //   setProcessedTranscript(result);
+      //   setCurrentView('success');
+      // }, 1000);
       
-      onTranscriptAdded(result);
+      // onTranscriptAdded(result);
     } catch (err) {
       // Handled by hook
       console.error('Video processing failed:', err);

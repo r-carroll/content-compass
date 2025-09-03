@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core';
 import { useState } from 'react';
 
 export function useVideoUpload() {
@@ -17,9 +18,13 @@ export function useVideoUpload() {
       // 4. Process the transcript into snippets
       // 5. Store the result in the database
       
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate processing time
+      //await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate processing time
       
       // Mock processed transcript result
+
+      console.log('Video file uploaded:', videoFile.name);
+      await invoke('transcribe_video', { videoPath: videoFile.name} );
+
       const mockTranscript = {
         id: Date.now().toString(),
         title: videoFile.name.replace(/\.[^/.]+$/, ''), // Remove file extension
@@ -33,7 +38,7 @@ export function useVideoUpload() {
 
       return mockTranscript;
     } catch (err) {
-      const errorMessage = err.message || 'Failed to process video';
+      const errorMessage = err;
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {

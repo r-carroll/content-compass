@@ -8,7 +8,7 @@ export default function VideoUpload({ onUpload, loading }) {
   const [validationError, setValidationError] = useState(null);
   const fileInputRef = useRef(null);
 
-  const handleDrag = (e) => {
+  const handleDrag = (e: Event) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") {
@@ -18,7 +18,7 @@ export default function VideoUpload({ onUpload, loading }) {
     }
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: Event) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
@@ -31,6 +31,7 @@ export default function VideoUpload({ onUpload, loading }) {
   const handleVideoUpload = (file) => {
     try {
       validateVideoFile(file);
+      console.log('File validated:', file);
       onUpload(file);
     } catch (error) {
       setValidationError(`Invalid file: ${error.message}`);
@@ -39,6 +40,7 @@ export default function VideoUpload({ onUpload, loading }) {
   };
 
   const handleFileSelect = (e) => {
+    console.log('file selected');
     if (e.target.files && e.target.files[0]) {
       handleVideoUpload(e.target.files[0]);
     }

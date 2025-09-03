@@ -1,12 +1,27 @@
-import torch
-import whisper
-import sys
+import subprocess
 
 def transcribe_audio(audio_path):
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
-    model = whisper.load_model("large-v3").to(device)
-    result = model.transcribe(audio_path, fp16=True)  # fp16 for MPS speed
-    return result["text"]
+    # Command to run whisper-mps
+    command = [
+        "whisper-mps",
+        "--file-name", audio_path,
+        "--model-name", "large-v3"
+    ]
+
+    # Execute the command
+    result = subprocess.run(command, capture_output=True, text=True)
+
+    # Check for errors
+    if result.returncode != 0:
+        print(f"Error during transcription: {result.stderr}")
+        return None
+
+    # The transcribed text is in the stdout
+    return result.stdout.strip()
 
 if __name__ == "__main__":
-    print(transcribe_audio(sys.argv[1]))
+    import sys
+    if len(sys.argv) > 1:
+        transcribed_text = transcribe_audio(sys.argv[1])
+        if transcribed_text:
+            print(transcribed_text)

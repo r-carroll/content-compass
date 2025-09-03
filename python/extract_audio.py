@@ -9,4 +9,7 @@ def extract_audio(video_path, output_path="audio.wav"):
     return output_path
 
 if __name__ == "__main__":
-    extract_audio(sys.argv[1])
+    if len(sys.argv) > 2:
+        extract_audio(sys.argv[1], sys.argv[2])
+    else:
+        extract_audio(sys.argv[1])

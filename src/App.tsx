@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import AppHeader from './components/AppHeader';
-import MainContent from './components/MainContent';
 import { useTranscripts } from './hooks/useTranscripts';
 import './styles/App.css';
+import MainContent from './components/MainContent';
 
 function App() {
   const { 
