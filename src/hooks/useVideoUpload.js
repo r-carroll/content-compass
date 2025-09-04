@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useState, useEffect } from 'react';
 import { parseAndValidateJSON } from '../lib/validation';
@@ -14,11 +14,13 @@ export function useVideoUpload() {
     let unlisten;
     
     const setupListener = async () => {
-      unlisten = await listen('transcription-progress', (event) => {
-        const { stage, progress: progressValue, message } = event.payload;
-        setProgress(progressValue);
-        setProgressMessage(message);
-      });
+      if (isTauri()) {
+        unlisten = await listen('transcription-progress', (event) => {
+          const { stage, progress: progressValue, message } = event.payload;
+          setProgress(progressValue);
+          setProgressMessage(message);
+        });
+      }
     };
     
     setupListener();
@@ -38,11 +40,15 @@ export function useVideoUpload() {
     try {
       console.log('Video file uploaded:', videoFile.name);
       
-      // Start the async transcription process
-      await invoke('transcribe_video_async', { videoPath: videoFile.name });
-      
-      // Read the transcription output
-      const transcriptOutput = await invoke('read_transcript_output');
+      if (isTauri()) {
+        // Start the async transcription process
+        await invoke('transcribe_video_async', { videoPath: videoFile.name });
+        
+        // Read the transcription output
+        const transcriptOutput = await invoke('read_transcript_output');
+      } else {
+        throw new Error('This application requires Tauri to process videos');
+      }
       
       // Parse and validate the JSON output
       const { data: transcriptData } = parseAndValidateJSON(transcriptOutput);
