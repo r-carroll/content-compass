@@ -82,9 +82,9 @@ export default function VideoUpload({ onUpload, loading }) {
               <div className="loading-spinner">
                 <div className="processing-animation">
                   <SparkleIcon className="sparkle-icon" />
-                  <div className="spinner"></div>
+                  <VideoIcon className="video-icon" />
                 </div>
-                <p>Processing video...</p>
+                <p>Uploading video...</p>
               </div>
             ) : (
               <>

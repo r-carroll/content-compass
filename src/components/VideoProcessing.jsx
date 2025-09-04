@@ -1,13 +1,22 @@
 import React from 'react';
 import { VideoIcon, CheckIcon, SparkleIcon } from './Icons';
 
-export default function VideoProcessing({ fileName, progress }) {
+export default function VideoProcessing({ fileName, progress, progressMessage }) {
   const steps = [
-    { id: 'upload', label: 'Uploading video', completed: progress >= 25 },
-    { id: 'extract', label: 'Extracting audio', completed: progress >= 50 },
+    { id: 'upload', label: 'Preparing video', completed: progress >= 25 },
+    { id: 'extract', label: 'Extracting audio', completed: progress >= 25 },
     { id: 'transcribe', label: 'Generating transcript', completed: progress >= 75 },
-    { id: 'analyze', label: 'Analyzing content', completed: progress >= 100 }
+    { id: 'analyze', label: 'Processing complete', completed: progress >= 100 }
   ];
+
+  const getCurrentStage = () => {
+    if (progress >= 100) return 'analyze';
+    if (progress >= 75) return 'transcribe';
+    if (progress >= 25) return 'extract';
+    return 'upload';
+  };
+
+  const currentStage = getCurrentStage();
 
   return (
     <div className="processing-state">
@@ -19,16 +28,18 @@ export default function VideoProcessing({ fileName, progress }) {
       </div>
       <h2>Analyzing Your Content</h2>
       <p className="processing-subtitle">
-        We're extracting insights from "{fileName}" using AI-powered analysis
+        {progressMessage || `Processing "${fileName}" using AI-powered analysis`}
       </p>
       
       <div className="processing-steps">
-        {steps.map((step) => (
+        {steps.map((step) => {
+          const isCurrent = currentStage === step.id && !step.completed;
+          return (
           <div key={step.id} className="processing-step">
-            <div className={`step-icon ${step.completed ? 'completed' : progress > steps.findIndex(s => s.id === step.id) * 25 ? 'current' : 'pending'}`}>
+            <div className={`step-icon ${step.completed ? 'completed' : isCurrent ? 'current' : 'pending'}`}>
               {step.completed ? (
                 <CheckIcon />
-              ) : progress > steps.findIndex(s => s.id === step.id) * 25 ? (
+              ) : isCurrent ? (
                 <div className="mini-spinner"></div>
               ) : (
                 <div className="step-dot"></div>
@@ -36,7 +47,8 @@ export default function VideoProcessing({ fileName, progress }) {
             </div>
             <span className={step.completed ? 'completed' : ''}>{step.label}</span>
           </div>
-        ))}
+          );
+        })}
       </div>
       
       <div className="progress-bar">

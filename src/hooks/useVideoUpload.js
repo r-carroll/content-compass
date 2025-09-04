@@ -1,30 +1,45 @@
 import { invoke } from '@tauri-apps/api/core';
-import { useState } from 'react';
+import { listen } from '@tauri-apps/api/event';
+import { useState, useEffect } from 'react';
 import { parseAndValidateJSON } from '../lib/validation';
 
 export function useVideoUpload() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState('');
 
+  // Set up event listener for progress updates
+  useEffect(() => {
+    let unlisten;
+    
+    const setupListener = async () => {
+      unlisten = await listen('transcription-progress', (event) => {
+        const { stage, progress: progressValue, message } = event.payload;
+        setProgress(progressValue);
+        setProgressMessage(message);
+      });
+    };
+    
+    setupListener();
+    
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, []);
   const uploadVideo = async (videoFile) => {
     setLoading(true);
     setError(null);
+    setProgress(0);
+    setProgressMessage('Preparing video for processing...');
 
     try {
-      // Simulate video processing API call
-      // In a real implementation, this would:
-      // 1. Upload the video file to a processing service
-      // 2. Extract audio from the video
-      // 3. Send audio to transcription service (like OpenAI Whisper, AssemblyAI, etc.)
-      // 4. Process the transcript into snippets
-      // 5. Store the result in the database
-      
-      //await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate processing time
-      
       console.log('Video file uploaded:', videoFile.name);
       
-      // Transcribe the video
-      await invoke('transcribe_video', { videoPath: videoFile.name });
+      // Start the async transcription process
+      await invoke('transcribe_video_async', { videoPath: videoFile.name });
       
       // Read the transcription output
       const transcriptOutput = await invoke('read_transcript_output');
@@ -56,6 +71,8 @@ export function useVideoUpload() {
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
+      setProgress(0);
+      setProgressMessage('');
     }
   };
 
@@ -66,6 +83,8 @@ export function useVideoUpload() {
   return {
     loading,
     error,
+    progress,
+    progressMessage,
     uploadVideo,
     clearError
   };

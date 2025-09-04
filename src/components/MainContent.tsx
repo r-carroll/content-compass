@@ -26,25 +26,13 @@ export default function MainContent({
     try {
       setProcessingFileName(videoFile.name);
       setCurrentView('processing');
+      setProcessingProgress(0);
       
-      // Simulate processing progress
-      // const progressInterval = setInterval(() => {
-      //   setProcessingProgress(prev => {
-      //     if (prev >= 95) {
-      //       clearInterval(progressInterval);
-      //       return prev;
-      //     }
-      //     return prev + Math.random() * 10;
-      //   });
-      // }, 500);
       console.log('Starting upload for:', videoFile);
       const result = await uploadVideo(videoFile);
-      setProcessingProgress(100);
       
-      setTimeout(() => {
-        setProcessedTranscript(result);
-        setCurrentView('success');
-      }, 500);
+      setProcessedTranscript(result);
+      setCurrentView('success');
       
       onTranscriptAdded(result);
     } catch (err) {
@@ -54,6 +42,13 @@ export default function MainContent({
       setProcessingProgress(0);
     }
   };
+
+  // Update progress from the upload hook
+  React.useEffect(() => {
+    if (loading) {
+      setProcessingProgress(uploadVideo.progress || 0);
+    }
+  }, [loading, uploadVideo.progress]);
 
   const handleViewSnippets = (transcriptId) => {
     const transcript = transcripts.find(t => t.id === transcriptId);
@@ -144,7 +139,8 @@ export default function MainContent({
             {currentView === 'processing' && (
               <VideoProcessing 
                 fileName={processingFileName}
-                progress={processingProgress}
+                progress={loading ? (uploadVideo.progress || 0) : processingProgress}
+                progressMessage={uploadVideo.progressMessage}
               />
             )}
             
