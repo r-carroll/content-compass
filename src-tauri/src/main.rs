@@ -7,7 +7,7 @@ use std::path::Path;
 use std::thread;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tauri::{Manager, Window};
+use tauri::{Manager, Window, Emitter};
 use serde_json::json;
 
 #[derive(Clone, serde::Serialize)]
