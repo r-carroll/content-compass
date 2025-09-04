@@ -38,9 +38,10 @@ export default function UploadSuccess({ transcript, onViewSnippets, onUploadAnot
         <button 
           className="btn btn-primary"
           onClick={() => onViewSnippets(transcript.id)}
+          disabled={!transcript.snippets || transcript.snippets.length === 0}
         >
           <CompassIcon className="btn-icon" />
-          Explore Insights
+          {transcript.snippets && transcript.snippets.length > 0 ? 'Explore Insights' : 'No Insights Available'}
         </button>
         <button 
           className="btn btn-secondary"

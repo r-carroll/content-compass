@@ -39,15 +39,14 @@ export default function MainContent({
       // }, 500);
       console.log('Starting upload for:', videoFile);
       const result = await uploadVideo(videoFile);
-      // clearInterval(progressInterval);
-      // setProcessingProgress(100);
+      setProcessingProgress(100);
       
-      // setTimeout(() => {
-      //   setProcessedTranscript(result);
-      //   setCurrentView('success');
-      // }, 1000);
+      setTimeout(() => {
+        setProcessedTranscript(result);
+        setCurrentView('success');
+      }, 500);
       
-      // onTranscriptAdded(result);
+      onTranscriptAdded(result);
     } catch (err) {
       // Handled by hook
       console.error('Video processing failed:', err);
@@ -58,7 +57,11 @@ export default function MainContent({
 
   const handleViewSnippets = (transcriptId) => {
     const transcript = transcripts.find(t => t.id === transcriptId);
-    setViewingSnippets({ id: transcriptId, transcript });
+    setViewingSnippets({ 
+      id: transcriptId, 
+      transcript,
+      transcriptData: transcript // Pass the full transcript data including snippets
+    });
   };
 
   const handleUploadAnother = () => {
@@ -71,7 +74,12 @@ export default function MainContent({
 
   const handleSelectTranscript = (transcriptId) => {
     onTranscriptSelected(transcriptId);
-    handleViewSnippets(transcriptId);
+    const transcript = transcripts.find(t => t.id === transcriptId);
+    setViewingSnippets({ 
+      id: transcriptId, 
+      transcript,
+      transcriptData: transcript
+    });
   };
 
   const handleDeleteTranscript = async (transcriptId) => {
@@ -164,6 +172,7 @@ export default function MainContent({
         <SnippetView
           transcriptId={viewingSnippets.id}
           transcript={viewingSnippets.transcript}
+          transcriptData={viewingSnippets.transcriptData}
           onClose={handleCloseSnippets}
           onTranscriptUpdated={handleTranscriptUpdated}
         />

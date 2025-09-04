@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { parseAndValidateJSON } from '../lib/validation';
 
 export function useTranscripts() {
   const [transcripts, setTranscripts] = useState([]);
@@ -10,32 +12,33 @@ export function useTranscripts() {
     setError(null);
 
     try {
-      // Simulate API call to load transcripts
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Mock data - in real implementation, this would fetch from your database
-      const mockTranscripts = [
-        {
-          id: '1',
-          title: 'Marketing Strategy Meeting',
-          snippet_count: 15,
-          total_duration: 1800, // 30 minutes
-          needs_review_count: 3,
-          created_at: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-          video_file_name: 'marketing-meeting.mp4'
-        },
-        {
-          id: '2',
-          title: 'Product Demo Recording',
-          snippet_count: 22,
-          total_duration: 2700, // 45 minutes
-          needs_review_count: 0,
-          created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-          video_file_name: 'product-demo.mov'
-        }
-      ];
 
-      setTranscripts(mockTranscripts);
+      // Try to load existing transcript from output.json
+      try {
+        const transcriptOutput = await invoke('read_transcript_output');
+        const { data: transcriptData } = parseAndValidateJSON(transcriptOutput);
+        
+        // Create a transcript entry from the output data
+        const transcript = {
+          id: 'current-transcript',
+          title: transcriptData.title || 'Recent Transcript',
+          snippet_count: transcriptData.snippets ? transcriptData.snippets.length : 0,
+          total_duration: transcriptData.snippets ? 
+            transcriptData.snippets.reduce((total, snippet) => 
+              Math.max(total, snippet.end || 0), 0
+            ) : 0,
+          needs_review_count: transcriptData.snippets ? 
+            transcriptData.snippets.filter(s => s.needs_review).length : 0,
+          created_at: new Date().toISOString(),
+          video_file_name: 'processed-video',
+          snippets: transcriptData.snippets || []
+        };
+        
+        setTranscripts([transcript]);
+      } catch (readError) {
+        console.log('No existing transcript found or invalid format:', readError);
+        setTranscripts([]);
+      }
     } catch (err) {
       setError(err.message || 'Failed to load transcripts');
     } finally {

@@ -167,10 +167,11 @@ function SnippetViewContent({ transcript, onClose }) {
   );
 }
 
-export default function SnippetView({ transcriptId, transcript, onClose, onTranscriptUpdated }) {
+export default function SnippetView({ transcriptId, transcript, transcriptData, onClose, onTranscriptUpdated }) {
   return (
     <SnippetProvider 
       transcriptId={transcriptId} 
+      transcriptData={transcriptData}
       onTranscriptUpdated={onTranscriptUpdated}
     >
       <SnippetViewContent 

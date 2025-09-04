@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useState } from 'react';
+import { parseAndValidateJSON } from '../lib/validation';
 
 export function useVideoUpload() {
   const [loading, setLoading] = useState(false);
@@ -20,25 +21,37 @@ export function useVideoUpload() {
       
       //await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate processing time
       
-      // Mock processed transcript result
-
       console.log('Video file uploaded:', videoFile.name);
-      await invoke('transcribe_video', { videoPath: videoFile.name} );
-
-      const mockTranscript = {
+      
+      // Transcribe the video
+      await invoke('transcribe_video', { videoPath: videoFile.name });
+      
+      // Read the transcription output
+      const transcriptOutput = await invoke('read_transcript_output');
+      
+      // Parse and validate the JSON output
+      const { data: transcriptData } = parseAndValidateJSON(transcriptOutput);
+      
+      // Create transcript object with metadata
+      const processedTranscript = {
         id: Date.now().toString(),
-        title: videoFile.name.replace(/\.[^/.]+$/, ''), // Remove file extension
-        snippet_count: Math.floor(Math.random() * 20) + 10,
-        total_duration: Math.floor(Math.random() * 3600) + 300, // 5-65 minutes
-        needs_review_count: Math.floor(Math.random() * 5),
+        title: transcriptData.title || videoFile.name.replace(/\.[^/.]+$/, ''),
+        snippet_count: transcriptData.snippets ? transcriptData.snippets.length : 0,
+        total_duration: transcriptData.snippets ? 
+          transcriptData.snippets.reduce((total, snippet) => 
+            Math.max(total, snippet.end || 0), 0
+          ) : 0,
+        needs_review_count: transcriptData.snippets ? 
+          transcriptData.snippets.filter(s => s.needs_review).length : 0,
         created_at: new Date().toISOString(),
         video_file_name: videoFile.name,
-        video_file_size: videoFile.size
+        video_file_size: videoFile.size,
+        snippets: transcriptData.snippets || []
       };
 
-      return mockTranscript;
+      return processedTranscript;
     } catch (err) {
-      const errorMessage = err;
+      const errorMessage = err.message || err;
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {

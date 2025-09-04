@@ -2,6 +2,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::process::Command;
+use std::fs;
+use std::path::Path;
 
 #[tauri::command]
 fn transcribe_video(video_path: String) -> Result<String, String> {
@@ -42,13 +44,39 @@ fn transcribe_video(video_path: String) -> Result<String, String> {
     let transcript = String::from_utf8_lossy(&transcribe_output.stdout).to_string();
     println!("Transcription output: {}", transcript);
 
-    Ok(transcript)
+    // Save the transcript to output.json
+    let output_path = Path::new("output.json");
+    match fs::write(output_path, &transcript) {
+        Ok(_) => {
+            println!("Transcript saved to output.json");
+            Ok(transcript)
+        }
+        Err(e) => {
+            println!("Failed to save transcript: {}", e);
+            // Still return the transcript even if saving fails
+            Ok(transcript)
+        }
+    }
+}
+
+#[tauri::command]
+fn read_transcript_output() -> Result<String, String> {
+    let output_path = Path::new("output.json");
+    
+    if !output_path.exists() {
+        return Err("No transcript output file found".to_string());
+    }
+    
+    match fs::read_to_string(output_path) {
+        Ok(content) => Ok(content),
+        Err(e) => Err(format!("Failed to read transcript output: {}", e))
+    }
 }
 
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
-        .invoke_handler(tauri::generate_handler![transcribe_video])
+        .invoke_handler(tauri::generate_handler![transcribe_video, read_transcript_output])
         .run(tauri::generate_context!())
         .expect("error while running Tauri");
 }
