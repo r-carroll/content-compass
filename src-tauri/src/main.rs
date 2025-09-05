@@ -5,10 +5,7 @@ use std::process::Command;
 use std::fs;
 use std::path::Path;
 use std::thread;
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
-use tauri::{Manager, Window, Emitter};
-use serde_json::json;
+use tauri::{Window, Emitter};
 
 #[derive(Clone, serde::Serialize)]
 struct TranscriptionProgress {
@@ -42,9 +39,11 @@ fn transcribe_video_blocking(video_path: &str, window: &Window) -> Result<String
         message: "Extracting audio from video...".to_string(),
     });
 
-    // Set audio.wav path to project root (one level up from src-tauri)
+    // Set audio.wav and output.json paths to project root (one level up from src-tauri)
     let audio_path = std::path::Path::new("../audio.wav");
     let audio_path_str = audio_path.to_str().ok_or("Failed to convert audio path to string")?.to_string();
+    let output_path = std::path::Path::new("../output.json");
+    let output_path_str = output_path.to_str().ok_or("Failed to convert output path to string")?.to_string();
 
     // Extract audio, pass output path explicitly
     let extract_output = Command::new("python3")
@@ -67,10 +66,11 @@ fn transcribe_video_blocking(video_path: &str, window: &Window) -> Result<String
         message: "Generating transcript with AI...".to_string(),
     });
 
-    // Transcribe using the same absolute path
+    // Transcribe using the same absolute path and pass output path
     let transcribe_output = Command::new("python3")
         .arg("../python/transcribe.py")
         .arg(&audio_path_str)
+        .arg(&output_path_str)
         .output()
         .map_err(|e| format!("Failed to run transcribe.py: {}", e))?;
 
@@ -80,7 +80,14 @@ fn transcribe_video_blocking(video_path: &str, window: &Window) -> Result<String
         return Err(format!("Transcription failed: {}", err_msg));
     }
 
-    let transcript = String::from_utf8_lossy(&transcribe_output.stdout).to_string();
+    // Read the transcript from output.json
+    let transcript = match fs::read_to_string(&output_path) {
+        Ok(content) => content,
+        Err(e) => {
+            println!("Failed to read transcript output: {}", e);
+            return Err(format!("Failed to read transcript output: {}", e));
+        }
+    };
     println!("Transcription output: {}", transcript);
 
     // Emit progress update
@@ -90,27 +97,14 @@ fn transcribe_video_blocking(video_path: &str, window: &Window) -> Result<String
         message: "Saving transcript...".to_string(),
     });
 
-    // Save the transcript to output.json
-    let output_path = Path::new("output.json");
-    match fs::write(output_path, &transcript) {
-        Ok(_) => {
-            println!("Transcript saved to output.json");
-            
-            // Emit completion
-            let _ = window.emit("transcription-progress", TranscriptionProgress {
-                stage: "complete".to_string(),
-                progress: 100,
-                message: "Transcription complete!".to_string(),
-            });
-            
-            Ok(transcript)
-        }
-        Err(e) => {
-            println!("Failed to save transcript: {}", e);
-            // Still return the transcript even if saving fails
-            Ok(transcript)
-        }
-    }
+    // Emit completion
+    let _ = window.emit("transcription-progress", TranscriptionProgress {
+        stage: "complete".to_string(),
+        progress: 100,
+        message: "Transcription complete!".to_string(),
+    });
+
+    Ok(transcript)
 }
 #[tauri::command]
 fn read_transcript_output() -> Result<String, String> {
