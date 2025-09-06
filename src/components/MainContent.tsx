@@ -139,8 +139,6 @@ export default function MainContent({
             {currentView === 'processing' && (
               <VideoProcessing 
                 fileName={processingFileName}
-                progress={loading ? (uploadVideo.progress || 0) : processingProgress}
-                progressMessage={uploadVideo.progressMessage}
               />
             )}
             

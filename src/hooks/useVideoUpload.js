@@ -17,8 +17,12 @@ export function useVideoUpload() {
       if (isTauri()) {
         unlisten = await listen('transcription-progress', (event) => {
           const { stage, progress: progressValue, message } = event.payload;
+          console.log('Progress update:', { stage, progressValue, message });
           setProgress(progressValue);
           setProgressMessage(message);
+          
+          // When transcription is complete, we don't need to do anything here
+          // The uploadVideo function will handle reading the results
         });
       }
     };
@@ -41,36 +45,36 @@ export function useVideoUpload() {
       console.log('Video file uploaded:', videoFile.name);
       
       if (isTauri()) {
-        // Start the async transcription process
+        // Start the async transcription process and wait for completion
         await invoke('transcribe_video_async', { videoPath: videoFile.name });
         
-        // Read the transcription output
+        // After transcription is complete, read the results
         const transcriptOutput = await invoke('read_transcript_output');
+        
+        // Parse and validate the JSON output
+        const { data: transcriptData } = parseAndValidateJSON(transcriptOutput);
+        
+        // Create transcript object with metadata
+        const processedTranscript = {
+          id: Date.now().toString(),
+          title: transcriptData.title || videoFile.name.replace(/\.[^/.]+$/, ''),
+          snippet_count: transcriptData.snippets ? transcriptData.snippets.length : 0,
+          total_duration: transcriptData.snippets ? 
+            transcriptData.snippets.reduce((total, snippet) => 
+              Math.max(total, snippet.end || 0), 0
+            ) : 0,
+          needs_review_count: transcriptData.snippets ? 
+            transcriptData.snippets.filter(s => s.needs_review).length : 0,
+          created_at: new Date().toISOString(),
+          video_file_name: videoFile.name,
+          video_file_size: videoFile.size,
+          snippets: transcriptData.snippets || []
+        };
+
+        return processedTranscript;
       } else {
         throw new Error('This application requires Tauri to process videos');
       }
-      
-      // Parse and validate the JSON output
-      const { data: transcriptData } = parseAndValidateJSON(transcriptOutput);
-      
-      // Create transcript object with metadata
-      const processedTranscript = {
-        id: Date.now().toString(),
-        title: transcriptData.title || videoFile.name.replace(/\.[^/.]+$/, ''),
-        snippet_count: transcriptData.snippets ? transcriptData.snippets.length : 0,
-        total_duration: transcriptData.snippets ? 
-          transcriptData.snippets.reduce((total, snippet) => 
-            Math.max(total, snippet.end || 0), 0
-          ) : 0,
-        needs_review_count: transcriptData.snippets ? 
-          transcriptData.snippets.filter(s => s.needs_review).length : 0,
-        created_at: new Date().toISOString(),
-        video_file_name: videoFile.name,
-        video_file_size: videoFile.size,
-        snippets: transcriptData.snippets || []
-      };
-
-      return processedTranscript;
     } catch (err) {
       const errorMessage = err.message || err;
       setError(errorMessage);

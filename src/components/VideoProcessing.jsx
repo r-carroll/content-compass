@@ -1,7 +1,10 @@
 import React from 'react';
 import { VideoIcon, CheckIcon, SparkleIcon } from './Icons';
+import { useVideoUpload } from '../hooks/useVideoUpload';
 
-export default function VideoProcessing({ fileName, progress, progressMessage }) {
+export default function VideoProcessing({ fileName }) {
+  const { progress, progressMessage } = useVideoUpload();
+  
   const steps = [
     { id: 'upload', label: 'Preparing video', completed: progress >= 25 },
     { id: 'extract', label: 'Extracting audio', completed: progress >= 25 },
