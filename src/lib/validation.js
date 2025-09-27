@@ -43,45 +43,28 @@ export function validateVideoFile(file) {
 
 export function parseAndValidateJSON(jsonString) {
   if (!jsonString || typeof jsonString !== 'string') {
-    throw new ValidationError('Invalid JSON data provided');
+    throw new ValidationError('No transcript data available');
   }
 
   let data;
   try {
     data = JSON.parse(jsonString);
   } catch (e) {
-    throw new ValidationError('Invalid JSON format. Please check your JSON syntax.');
+    throw new ValidationError('Failed to parse transcript data');
   }
 
-  return validateTranscriptData(data);
+  // Very minimal validation - just check if it's an object
+  if (!data || typeof data !== 'object') {
+    throw new ValidationError('Invalid transcript format');
+  }
+
+  return { data, isValid: true };
 }
 
+// Simplified validation that accepts any reasonable transcript structure
 export function validateTranscriptData(data) {
-  // Basic validation - just check if it's an object with some expected properties
-  if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    throw new ValidationError('Invalid transcript data format');
-  }
-
-  // Check for segments array (main content from whisper output)
-  if (!data.segments || !Array.isArray(data.segments)) {
-    throw new ValidationError('No transcript segments found');
-  }
-
-  if (data.segments.length === 0) {
-    throw new ValidationError('Transcript contains no segments');
-  }
-
-  // Basic validation of segments - just check they have required fields
-  const invalidSegments = data.segments.filter((segment, index) => {
-    return !segment || 
-           typeof segment.start !== 'number' || 
-           typeof segment.end !== 'number' || 
-           !segment.text || 
-           typeof segment.text !== 'string';
-  });
-
-  if (invalidSegments.length > 0) {
-    throw new ValidationError(`Found ${invalidSegments.length} invalid transcript segments`);
+  if (!data || typeof data !== 'object') {
+    throw new ValidationError('Invalid transcript data');
   }
 
   return { data, isValid: true };

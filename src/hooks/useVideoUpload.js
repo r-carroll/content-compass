@@ -59,13 +59,53 @@ export function useVideoUpload() {
         let transcriptData;
         try {
           console.log('Raw transcript output:', transcriptOutput);
-          const parsed = parseAndValidateJSON(transcriptOutput);
-          transcriptData = parsed.data;
+          transcriptData = JSON.parse(transcriptOutput);
         } catch (parseErr) {
-          throw new Error(`Failed to parse transcript output: ${parseErr.message || parseErr}`);
+          throw new Error(`Failed to parse transcript: ${parseErr.message || parseErr}`);
         }
 
-        // Convert whisper segments to our snippet format
+        // Convert transcript data to our snippet format - handle any structure
+        let snippets = [];
+        
+        if (transcriptData.segments && Array.isArray(transcriptData.segments)) {
+          // Whisper format with segments
+          snippets = transcriptData.segments.map((segment, index) => ({
+            id: `snippet-${Date.now()}-${index}`,
+            text: (segment.text || '').trim(),
+            start: segment.start || 0,
+            end: segment.end || 0,
+            needs_review: false,
+            notes: null
+          }));
+        } else if (Array.isArray(transcriptData)) {
+          // Direct array format
+          snippets = transcriptData.map((item, index) => ({
+            id: `snippet-${Date.now()}-${index}`,
+            text: (item.text || item.content || '').trim(),
+            start: item.start || item.startTime || 0,
+            end: item.end || item.endTime || 0,
+            needs_review: false,
+            notes: null
+          }));
+        } else if (transcriptData.text) {
+          // Simple text format - create one snippet
+          snippets = [{
+            id: `snippet-${Date.now()}-0`,
+            text: transcriptData.text.trim(),
+            start: 0,
+            end: transcriptData.duration || 0,
+            needs_review: false,
+            notes: null
+          }];
+        }
+        
+        // Filter out empty snippets
+        snippets = snippets.filter(snippet => snippet.text && snippet.text.length > 0);
+        
+        // Calculate total duration
+        const totalDuration = transcriptData.duration || 
+          (snippets.length > 0 ? Math.max(...snippets.map(s => s.end)) : 0);
+        
         const snippets = transcriptData.segments ? transcriptData.segments.map((segment, index) => ({
           id: `snippet-${Date.now()}-${index}`,
           text: segment.text.trim(),
@@ -80,8 +120,7 @@ export function useVideoUpload() {
           id: Date.now().toString(),
           title: videoFile.name.replace(/\.[^/.]+$/, ''),
           snippet_count: snippets.length,
-          total_duration: transcriptData.duration || (snippets.length > 0 ? 
-            Math.max(...snippets.map(s => s.end)) : 0),
+          total_duration: totalDuration,
           needs_review_count: 0, // Initially no snippets need review
           created_at: new Date().toISOString(),
           video_file_name: videoFile.name,

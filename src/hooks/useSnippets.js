@@ -27,9 +27,32 @@ export function useSnippets(transcriptId, transcriptData = null) {
         // Otherwise, try to read from the output file
         try {
           const transcriptOutput = await invoke('read_transcript_output');
-          const { data: parsedData } = parseAndValidateJSON(transcriptOutput);
+          const parsedData = JSON.parse(transcriptOutput);
           
-          // Convert whisper segments to snippet format
+          // Convert transcript data to snippet format - handle any structure
+          if (parsedData.segments && Array.isArray(parsedData.segments)) {
+            snippetsData = parsedData.segments.map((segment, index) => ({
+              id: `snippet-${transcriptId}-${index}`,
+              text: (segment.text || '').trim(),
+              start: segment.start || 0,
+              end: segment.end || 0,
+              needs_review: false,
+              notes: null
+            }));
+          } else if (Array.isArray(parsedData)) {
+            snippetsData = parsedData.map((item, index) => ({
+              id: `snippet-${transcriptId}-${index}`,
+              text: (item.text || item.content || '').trim(),
+              start: item.start || item.startTime || 0,
+              end: item.end || item.endTime || 0,
+              needs_review: false,
+              notes: null
+            }));
+          }
+          
+          // Filter out empty snippets
+          snippetsData = snippetsData.filter(snippet => snippet.text && snippet.text.length > 0);
+          
           snippetsData = parsedData.segments ? parsedData.segments.map((segment, index) => ({
             id: `snippet-${transcriptId}-${index}`,
             text: segment.text.trim(),

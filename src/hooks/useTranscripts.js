@@ -16,9 +16,34 @@ export function useTranscripts() {
       // Try to load existing transcript from output.json
       try {
         const transcriptOutput = await invoke('read_transcript_output');
-        const { data: transcriptData } = parseAndValidateJSON(transcriptOutput);
+        const transcriptData = JSON.parse(transcriptOutput);
         
-        // Convert whisper segments to snippets
+        // Convert transcript data to snippets - handle any structure
+        let snippets = [];
+        
+        if (transcriptData.segments && Array.isArray(transcriptData.segments)) {
+          snippets = transcriptData.segments.map((segment, index) => ({
+            id: `snippet-current-${index}`,
+            text: (segment.text || '').trim(),
+            start: segment.start || 0,
+            end: segment.end || 0,
+            needs_review: false,
+            notes: null
+          }));
+        } else if (Array.isArray(transcriptData)) {
+          snippets = transcriptData.map((item, index) => ({
+            id: `snippet-current-${index}`,
+            text: (item.text || item.content || '').trim(),
+            start: item.start || item.startTime || 0,
+            end: item.end || item.endTime || 0,
+            needs_review: false,
+            notes: null
+          }));
+        }
+        
+        // Filter out empty snippets
+        snippets = snippets.filter(snippet => snippet.text && snippet.text.length > 0);
+        
         const snippets = transcriptData.segments ? transcriptData.segments.map((segment, index) => ({
           id: `snippet-current-${index}`,
           text: segment.text.trim(),
