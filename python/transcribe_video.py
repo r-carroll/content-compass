@@ -7,4 +7,4 @@ if __name__ == "__main__":
     audio_path = extract_audio(video_path)
     transcribed_text = transcribe_audio(audio_path)
     if transcribed_text:
-        print(transcribed_text)
+        print('Transcription completed successfully.')

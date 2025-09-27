@@ -58,6 +58,10 @@ export default function VideoProcessing({ fileName }) {
         <div className="progress-fill" style={{ width: `${progress}%` }}></div>
       </div>
       <p className="progress-text">{Math.round(progress)}% complete</p>
+      {/* Explicit progress message and accessible live region */}
+      <div className="progress-message" aria-live="polite">
+        {progressMessage || 'Working on the transcript...'}
+      </div>
     </div>
   );
 }

@@ -108,13 +108,23 @@ fn transcribe_video_blocking(video_path: &str, window: &Window) -> Result<String
 }
 #[tauri::command]
 fn read_transcript_output() -> Result<String, String> {
-    let output_path = Path::new("output.json");
-    
-    if !output_path.exists() {
+    // The transcription pipeline writes the output file to the project root
+    // (one level up from src-tauri), so prefer that path. Fall back to
+    // "output.json" if the project-root file is not present (helps 
+    // development where working directory may differ).
+    println!("Reading transcript output (project root ../output.json, fallback output.json)");
+    let project_root_path = Path::new("../output.json");
+    let fallback_path = Path::new("output.json");
+
+    let chosen_path = if project_root_path.exists() {
+        project_root_path
+    } else if fallback_path.exists() {
+        fallback_path
+    } else {
         return Err("No transcript output file found".to_string());
-    }
-    
-    match fs::read_to_string(output_path) {
+    };
+
+    match fs::read_to_string(chosen_path) {
         Ok(content) => Ok(content),
         Err(e) => Err(format!("Failed to read transcript output: {}", e))
     }

@@ -47,34 +47,44 @@ export function useVideoUpload() {
       if (isTauri()) {
         // Start the async transcription process and wait for completion
         await invoke('transcribe_video_async', { videoPath: videoFile.name });
-        
+
         // After transcription is complete, read the results
         const transcriptOutput = await invoke('read_transcript_output');
-        
+
+        if (!transcriptOutput || typeof transcriptOutput !== 'string' || transcriptOutput.trim() === '') {
+          throw new Error('Transcript output is empty or missing');
+        }
+
         // Parse and validate the JSON output
-        const { data: transcriptData } = parseAndValidateJSON(transcriptOutput);
-        
+        let transcriptData;
+        try {
+          console.log('Raw transcript output:', transcriptOutput);
+          const parsed = parseAndValidateJSON(transcriptOutput);
+          transcriptData = parsed.data;
+        } catch (parseErr) {
+          throw new Error(`Failed to parse transcript output: ${parseErr.message || parseErr}`);
+        }
+
         // Create transcript object with metadata
         const processedTranscript = {
           id: Date.now().toString(),
-          title: transcriptData.title || videoFile.name.replace(/\.[^/.]+$/, ''),
-          snippet_count: transcriptData.snippets ? transcriptData.snippets.length : 0,
-          total_duration: transcriptData.snippets ? 
+          title: (transcriptData && transcriptData.title) || videoFile.name.replace(/\.[^/.]+$/, ''),
+          snippet_count: transcriptData && transcriptData.snippets ? transcriptData.snippets.length : 0,
+          total_duration: transcriptData && transcriptData.snippets ? 
             transcriptData.snippets.reduce((total, snippet) => 
               Math.max(total, snippet.end || 0), 0
             ) : 0,
-          needs_review_count: transcriptData.snippets ? 
+          needs_review_count: transcriptData && transcriptData.snippets ? 
             transcriptData.snippets.filter(s => s.needs_review).length : 0,
           created_at: new Date().toISOString(),
           video_file_name: videoFile.name,
           video_file_size: videoFile.size,
-          snippets: transcriptData.snippets || []
+          snippets: (transcriptData && transcriptData.snippets) || []
         };
 
         return processedTranscript;
-      } else {
-        throw new Error('This application requires Tauri to process videos');
       }
+      throw new Error('This application requires Tauri to process videos');
     } catch (err) {
       const errorMessage = err.message || err;
       setError(errorMessage);

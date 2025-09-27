@@ -13,13 +13,13 @@ export default function MainContent({
   selectedTranscript, 
   onTranscriptSelected,
   onRefreshTranscripts
-}) {
+}: any) {
   const [currentView, setCurrentView] = useState('upload');
-  const [processedTranscript, setProcessedTranscript] = useState(null);
-  const [viewingSnippets, setViewingSnippets] = useState(null);
+  const [processedTranscript, setProcessedTranscript] = useState<any>(null);
+  const [viewingSnippets, setViewingSnippets] = useState<any>(null);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [processingFileName, setProcessingFileName] = useState('');
-  const { loading, error, uploadVideo, clearError } = useVideoUpload();
+  const { loading, error, uploadVideo, clearError, progress } = useVideoUpload();
 
   const handleVideoUpload = async (videoFile) => {
     console.log('handleVideoUpload called with:', videoFile);
@@ -45,13 +45,12 @@ export default function MainContent({
 
   // Update progress from the upload hook
   React.useEffect(() => {
-    if (loading) {
-      setProcessingProgress(uploadVideo.progress || 0);
-    }
-  }, [loading, uploadVideo.progress]);
+    setProcessingProgress(progress || 0);
+    setProcessingFileName((name) => name || '');
+  }, [progress]);
 
-  const handleViewSnippets = (transcriptId) => {
-    const transcript = transcripts.find(t => t.id === transcriptId);
+  const handleViewSnippets = (transcriptId: string) => {
+    const transcript = transcripts.find((t: any) => t.id === transcriptId);
     setViewingSnippets({ 
       id: transcriptId, 
       transcript,
@@ -67,9 +66,9 @@ export default function MainContent({
     clearError();
   };
 
-  const handleSelectTranscript = (transcriptId) => {
+  const handleSelectTranscript = (transcriptId: string) => {
     onTranscriptSelected(transcriptId);
-    const transcript = transcripts.find(t => t.id === transcriptId);
+    const transcript = transcripts.find((t: any) => t.id === transcriptId);
     setViewingSnippets({ 
       id: transcriptId, 
       transcript,
@@ -77,7 +76,7 @@ export default function MainContent({
     });
   };
 
-  const handleDeleteTranscript = async (transcriptId) => {
+  const handleDeleteTranscript = async (transcriptId: string) => {
     try {
       await onTranscriptDeleted(transcriptId);
       
@@ -87,11 +86,12 @@ export default function MainContent({
       }
       
       // Close snippet view if viewing deleted transcript
-      if (viewingSnippets?.id === transcriptId) {
+  if (viewingSnippets?.id === transcriptId) {
         setViewingSnippets(null);
       }
     } catch (err) {
-      throw new Error(err.message || 'Failed to delete transcript');
+  const message = (err as any).message || 'Failed to delete transcript';
+  throw new Error(message);
     }
   };
 
@@ -100,7 +100,7 @@ export default function MainContent({
     onTranscriptSelected(null);
   };
 
-  const handleTranscriptUpdated = async (transcriptId) => {
+  const handleTranscriptUpdated = async (_transcriptId?: string) => {
     // Reload transcripts to get updated needs_review_count
     try {
       if (onRefreshTranscripts) {
