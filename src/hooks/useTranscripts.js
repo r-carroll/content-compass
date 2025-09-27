@@ -18,20 +18,27 @@ export function useTranscripts() {
         const transcriptOutput = await invoke('read_transcript_output');
         const { data: transcriptData } = parseAndValidateJSON(transcriptOutput);
         
+        // Convert whisper segments to snippets
+        const snippets = transcriptData.segments ? transcriptData.segments.map((segment, index) => ({
+          id: `snippet-current-${index}`,
+          text: segment.text.trim(),
+          start: segment.start,
+          end: segment.end,
+          needs_review: false,
+          notes: null
+        })) : [];
+        
         // Create a transcript entry from the output data
         const transcript = {
           id: 'current-transcript',
-          title: transcriptData.title || 'Recent Transcript',
-          snippet_count: transcriptData.snippets ? transcriptData.snippets.length : 0,
-          total_duration: transcriptData.snippets ? 
-            transcriptData.snippets.reduce((total, snippet) => 
-              Math.max(total, snippet.end || 0), 0
-            ) : 0,
-          needs_review_count: transcriptData.snippets ? 
-            transcriptData.snippets.filter(s => s.needs_review).length : 0,
+          title: 'Recent Transcript',
+          snippet_count: snippets.length,
+          total_duration: transcriptData.duration || (snippets.length > 0 ? 
+            Math.max(...snippets.map(s => s.end)) : 0),
+          needs_review_count: 0,
           created_at: new Date().toISOString(),
           video_file_name: 'processed-video',
-          snippets: transcriptData.snippets || []
+          snippets: snippets
         };
         
         setTranscripts([transcript]);

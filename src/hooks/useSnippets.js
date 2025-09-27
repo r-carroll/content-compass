@@ -28,7 +28,16 @@ export function useSnippets(transcriptId, transcriptData = null) {
         try {
           const transcriptOutput = await invoke('read_transcript_output');
           const { data: parsedData } = parseAndValidateJSON(transcriptOutput);
-          snippetsData = parsedData.snippets || [];
+          
+          // Convert whisper segments to snippet format
+          snippetsData = parsedData.segments ? parsedData.segments.map((segment, index) => ({
+            id: `snippet-${transcriptId}-${index}`,
+            text: segment.text.trim(),
+            start: segment.start,
+            end: segment.end,
+            needs_review: false,
+            notes: null
+          })) : [];
         } catch (readError) {
           console.warn('Could not read transcript output:', readError);
           // Fall back to empty array if file doesn't exist or is invalid
@@ -36,17 +45,7 @@ export function useSnippets(transcriptId, transcriptData = null) {
         }
       }
       
-      // Add IDs to snippets if they don't have them
-      const processedSnippets = snippetsData.map((snippet, index) => ({
-        id: snippet.id || `snippet-${transcriptId}-${index}`,
-        text: snippet.text || '',
-        start: snippet.start || 0,
-        end: snippet.end || 0,
-        needs_review: snippet.needs_review || false,
-        notes: snippet.notes || null
-      }));
-
-      setSnippets(processedSnippets);
+      setSnippets(snippetsData);
     } catch (err) {
       setError(err.message || 'Failed to load snippets');
     } finally {

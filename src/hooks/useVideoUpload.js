@@ -65,21 +65,28 @@ export function useVideoUpload() {
           throw new Error(`Failed to parse transcript output: ${parseErr.message || parseErr}`);
         }
 
+        // Convert whisper segments to our snippet format
+        const snippets = transcriptData.segments ? transcriptData.segments.map((segment, index) => ({
+          id: `snippet-${Date.now()}-${index}`,
+          text: segment.text.trim(),
+          start: segment.start,
+          end: segment.end,
+          needs_review: false,
+          notes: null
+        })) : [];
+
         // Create transcript object with metadata
         const processedTranscript = {
           id: Date.now().toString(),
-          title: (transcriptData && transcriptData.title) || videoFile.name.replace(/\.[^/.]+$/, ''),
-          snippet_count: transcriptData && transcriptData.snippets ? transcriptData.snippets.length : 0,
-          total_duration: transcriptData && transcriptData.snippets ? 
-            transcriptData.snippets.reduce((total, snippet) => 
-              Math.max(total, snippet.end || 0), 0
-            ) : 0,
-          needs_review_count: transcriptData && transcriptData.snippets ? 
-            transcriptData.snippets.filter(s => s.needs_review).length : 0,
+          title: videoFile.name.replace(/\.[^/.]+$/, ''),
+          snippet_count: snippets.length,
+          total_duration: transcriptData.duration || (snippets.length > 0 ? 
+            Math.max(...snippets.map(s => s.end)) : 0),
+          needs_review_count: 0, // Initially no snippets need review
           created_at: new Date().toISOString(),
           video_file_name: videoFile.name,
           video_file_size: videoFile.size,
-          snippets: (transcriptData && transcriptData.snippets) || []
+          snippets: snippets
         };
 
         return processedTranscript;
