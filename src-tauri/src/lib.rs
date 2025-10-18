@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
+use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct TranscriptSegment {
@@ -28,13 +29,33 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn load_transcript_snippets(transcript_id: String) -> Result<Vec<TranscriptSegment>, String> {
-    // For now, we'll read from the static output.json file
-    // In a real implementation, this would query a database based on transcript_id
-    let output_path = PathBuf::from("src-tauri/output.json");
+fn load_transcript_snippets(app_handle: tauri::AppHandle, transcript_id: String) -> Result<Vec<TranscriptSegment>, String> {
+    // Get the resource directory path
+    let resource_dir = app_handle.path().resource_dir()
+        .map_err(|e| format!("Failed to get resource directory: {}", e))?;
     
-    let file_contents = fs::read_to_string(&output_path)
-        .map_err(|e| format!("Failed to read transcript file: {}", e))?;
+    // Try multiple possible locations for the output.json file
+    let possible_paths = vec![
+        resource_dir.join("output.json"),
+        PathBuf::from("output.json"),
+        PathBuf::from("src-tauri/output.json"),
+        PathBuf::from("../src-tauri/output.json"),
+    ];
+    
+    let mut file_contents = String::new();
+    let mut found_path = None;
+    
+    for path in possible_paths {
+        if let Ok(contents) = fs::read_to_string(&path) {
+            file_contents = contents;
+            found_path = Some(path);
+            break;
+        }
+    }
+    
+    if found_path.is_none() {
+        return Err("Could not find output.json file in any expected location".to_string());
+    }
     
     let transcript_data: TranscriptData = serde_json::from_str(&file_contents)
         .map_err(|e| format!("Failed to parse transcript JSON: {}", e))?;
