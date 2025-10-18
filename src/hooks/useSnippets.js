@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 
 export function useSnippets(transcriptId) {
   const [snippets, setSnippets] = useState([]);
@@ -13,22 +14,25 @@ export function useSnippets(transcriptId) {
     setError(null);
 
     try {
-      // Simulate API call to load snippets
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Load snippets from backend via Tauri command
+      const loadedSnippets = await invoke('load_transcript_snippets', { 
+        transcriptId: transcriptId 
+      });
       
-      // Mock snippet data
-      const mockSnippets = Array.from({ length: 15 }, (_, i) => ({
-        id: `snippet-${i + 1}`,
-        text: `This is snippet ${i + 1} from the transcript. It contains some sample text that would normally come from the video transcription process.`,
-        start: i * 30,
-        end: (i + 1) * 30 - 2,
-        needs_review: Math.random() > 0.7,
-        notes: Math.random() > 0.8 ? `Note for snippet ${i + 1}` : null
+      // Transform the loaded snippets to ensure they have the correct structure
+      const transformedSnippets = loadedSnippets.map(segment => ({
+        id: segment.id.toString(),
+        text: segment.text.trim(),
+        start: segment.start,
+        end: segment.end,
+        needs_review: segment.needs_review || false,
+        notes: segment.notes || null
       }));
 
-      setSnippets(mockSnippets);
+      setSnippets(transformedSnippets);
     } catch (err) {
-      setError(err.message || 'Failed to load snippets');
+      console.error('Failed to load snippets:', err);
+      setError(err.message || err.toString() || 'Failed to load snippets');
     } finally {
       setLoading(false);
     }
