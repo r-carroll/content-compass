@@ -29,12 +29,13 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn load_transcript_snippets(app_handle: tauri::AppHandle, transcript_id: String) -> Result<Vec<TranscriptSegment>, String> {
+fn load_transcript_snippets(app_handle: tauri::AppHandle, _transcript_id: String) -> Result<Vec<TranscriptSegment>, String> {
     // Get the resource directory path
     let resource_dir = app_handle.path().resource_dir()
         .map_err(|e| format!("Failed to get resource directory: {}", e))?;
     
     // Try multiple possible locations for the output.json file
+    // Note: In a full implementation, this would load transcript-specific files based on transcript_id
     let possible_paths = vec![
         resource_dir.join("output.json"),
         PathBuf::from("output.json"),
@@ -42,28 +43,16 @@ fn load_transcript_snippets(app_handle: tauri::AppHandle, transcript_id: String)
         PathBuf::from("../src-tauri/output.json"),
     ];
     
-    let mut file_contents = String::new();
-    let mut found_path = None;
-    
-    for path in possible_paths {
-        if let Ok(contents) = fs::read_to_string(&path) {
-            file_contents = contents;
-            found_path = Some(path);
-            break;
-        }
-    }
-    
-    if found_path.is_none() {
-        return Err("Could not find output.json file in any expected location".to_string());
-    }
+    // Find and read the file from the first location that exists
+    let file_contents = possible_paths
+        .iter()
+        .find_map(|path| fs::read_to_string(path).ok())
+        .ok_or_else(|| "Could not find output.json file in any expected location".to_string())?;
     
     let transcript_data: TranscriptData = serde_json::from_str(&file_contents)
         .map_err(|e| format!("Failed to parse transcript JSON: {}", e))?;
     
-    // Convert segments to include default values for needs_review and notes
-    let snippets: Vec<TranscriptSegment> = transcript_data.segments;
-    
-    Ok(snippets)
+    Ok(transcript_data.segments)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
